@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "cris_shopping",
+    "scheme": "cris_shopping",
     "slug": "cris_shopping",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -23,6 +24,10 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ]
   }
 }
