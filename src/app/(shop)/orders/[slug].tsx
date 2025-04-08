@@ -1,24 +1,37 @@
-import {FlatList, Image, StyleSheet, Text, View} from "react-native";
+import {ActivityIndicator, FlatList, Image, StyleSheet, Text, View} from "react-native";
 import {Redirect, Stack, useLocalSearchParams} from "expo-router";
-import {ORDERS} from "../../../../assets/orders";
+import {getMyOrder, getMyOrders} from "../../../api/api";
+import {format} from "date-fns";
 
 const OrderDetails = () => {
     const { slug } = useLocalSearchParams<{ slug: string }>();
-    const order  = ORDERS.find(order => order.slug === slug);
-    if (!order) return <Redirect href='/404' />
+    const { data: order, error, isLoading } = getMyOrder(slug);
+    if (isLoading) return <ActivityIndicator />;
+    if (error || !order) return <Text>Error: {error?.message}</Text>;
+    if (!order) return <Redirect href='/404' />;
+
+    const orderItems = order.order_items.map((orderItem: any) => {
+        return {
+            id: orderItem.id,
+            title: orderItem.products.title,
+            heroImage: orderItem.products.hero_image,
+            price: orderItem.products.price,
+            quantity: orderItem.quantity,
+        };
+    });
 
     return (
         <View style={styles.container}>
-            <Stack.Screen options={{ title: `${order.item}` }} />
-            <Text style={styles.item}>{order.item}</Text>
+            <Stack.Screen options={{ title: `${order.slug}` }} />
+            <Text style={styles.item}>{order.slug}</Text>
             <Text style={styles.details}>{order.details}</Text>
             <View style={styles.statusBadge}>
                 <Text style={styles.statusText}>{order.status}</Text>
             </View>
-            <Text style={styles.date}>{order.date}</Text>
+            <Text style={styles.date}>{format(new Date(order.created_at), 'MM dd, yyyy')}</Text>
             <Text style={styles.itemTitle}>Items Ordered:</Text>
             <FlatList
-                data={order.items}
+                data={orderItems}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                     <View style={styles.orderItem}>

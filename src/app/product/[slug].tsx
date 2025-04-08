@@ -1,19 +1,23 @@
-import {FlatList, Image, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {ActivityIndicator, FlatList, Image, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {Redirect, Stack, useLocalSearchParams} from "expo-router";
 import {useToast} from "react-native-toast-notifications";
-import {PRODUCTS} from "../../../assets/products";
 import {useCartStore} from "../../store/cart-store";
 import {useState} from "react";
+import {getProduct} from "../../api/api";
 
 const ProductDetails = () => {
     const { slug } = useLocalSearchParams<{ slug: string }>();
     const toast = useToast();
-    const product = PRODUCTS.find(product => product.slug === slug);
-    if (!product) return <Redirect href='/404' />;
+    const { data: product, error, isLoading } = getProduct(slug);
     const { items, addItem, incrementItem, decrementItem } = useCartStore();
     const cartItem = items.find(item => item.id === product.id);
     const initialQuantity = cartItem ? cartItem.quantity : 1;
     const [quantity, setQuantity] = useState<number>(initialQuantity);
+
+    if (isLoading) return <ActivityIndicator />;
+    if (error) return <Text>Error: {error.message}</Text>;
+    if (!product) return <Redirect href='/404' />;
+
     const increaseQuantity = () => {
         if (quantity < product.maxQuantity) {
             setQuantity(prev => prev + 1);

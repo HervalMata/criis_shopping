@@ -3,12 +3,13 @@ import {StyleSheet, Image, Pressable, Text, View, TouchableOpacity, FlatList} fr
 import {Link} from "expo-router";
 import {FontAwesome} from "@expo/vector-icons";
 import {useCartStore} from "../store/cart-store";
+import {Tables} from "../types/database.types";
 
 export const ListHeader = (
     {
         categories,
     }: {
-        categories: Category[];
+        categories: Tables<'category'>[];
     }
 ) => {
     const { getItemCount } = useCartStore();

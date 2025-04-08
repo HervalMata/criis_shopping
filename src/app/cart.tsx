@@ -1,6 +1,8 @@
 import {Alert, FlatList, Image, Platform, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {useCartStore} from "../store/cart-store";
 import {StatusBar} from "expo-status-bar";
+import {createOrder, createOrderItem} from "../api/api";
+import {isAuthWeakPasswordError} from "@supabase/supabase-js";
 
 type CartItemType = {
     id: number;
@@ -59,9 +61,38 @@ const CartItem = (
 }
 
 export default function Cart() {
-    const { items, removeItem, incrementItem, decrementItem, getTotalPrice} = useCartStore();
-    const handleCheckout = () => {
-        Alert.alert('Proceeding to Checkout', `Total Amount: ${getTotalPrice()}`);
+    const { items, removeItem, incrementItem, decrementItem, getTotalPrice, resetCart} = useCartStore();
+    const { mutateAsync: createSupabaseOrder } = createOrder();
+    const { mutateAsync: createSupabaseOrderItem } = createOrderItem();
+    const handleCheckout = async () => {
+        // const totalPrice = parseFloat(getTotalPrice());
+        try {
+            await createSupabaseOrderItem(
+                // { totalPrice },
+                {
+                    // @ts-ignore
+                    onSuccess: data => {
+                        createSupabaseOrderItem(
+                            items.map(item => ({
+                                orderId: data.id,
+                                productId: item.id,
+                                quantity: item.quantity,
+                            })),
+                            {
+                                onSuccess: data => {
+                                    alert('Order created successfully');
+                                    resetCart();
+                                }
+                            }
+                        )
+                    }
+                }
+            )
+        } catch (error) {
+            console.log(error);
+            Alert.alert('Proceeding to Checkout', `Total Amount: ${getTotalPrice()}`);
+        }
+
     }
     return (
         <View style={styles.container}>
@@ -184,4 +215,4 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: "bold",
     },
-})
+});

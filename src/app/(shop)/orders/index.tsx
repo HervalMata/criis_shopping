@@ -1,15 +1,9 @@
-import {FlatList, ListRenderItem, Pressable, Text, View} from "react-native";
+import {ActivityIndicator, FlatList, ListRenderItem, Pressable, Text, View} from "react-native";
 import {StyleSheet} from "react-native";
 import {Link, Stack} from "expo-router";
 import {ORDERS} from "../../../../assets/orders";
 import {Order, OrderStatus} from "../../../../assets/types/order";
-
-const statusDisplayText: Record<OrderStatus, string> = {
-    Pending: "Pending",
-    Completed: "Completed",
-    Shipped: "Shipped",
-    InTransit: "InTransit",
-};
+import {getMyOrders} from "../../../api/api";
 
 const renderItem: ListRenderItem<Order> = ({ item }) => (
     <Link href={`/orders/${item.slug}`} asChild>
@@ -23,19 +17,37 @@ const renderItem: ListRenderItem<Order> = ({ item }) => (
                     </Text>
                 </View>
                 <View style={[styles.statusBadge, styles[`statusBadge_${item.status}`]]}>
-                    <Text style={styles.statusText}>{statusDisplayText[item.status]}</Text>
+                    <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
                 </View>
             </View>
         </Pressable>
     </Link>
-)
+);
 
 const Orders = () => {
+    const { data: orders, error, isLoading } = getMyOrders();
+    if (isLoading) return <ActivityIndicator />;
+    if (error || !orders) return <Text>Error: {error?.message}</Text>;
+
+    if (!orders.length)
+        return (
+            <Text
+                style={{
+                    fontSize: 16,
+                    color: '#555',
+                    textAlign: 'center',
+                    padding: 10,
+                }}
+                >
+                No orders created yet
+            </Text>
+        );
+
     return (
         <View style={styles.container}>
             <Stack.Screen options={{ title: "Orders" }} />
             <FlatList
-                data={ORDERS}
+                data={orders}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.id.toString()}
             />
